@@ -34,14 +34,14 @@ presensi/
 
 ## 🛠️ Tech Stack
 
-| Komponen | Teknologi |
-|----------|-----------|
-| **Backend** | Flask (Python) |
-| **Database** | MySQL |
-| **AI/ML** | DeepFace, ArcFace |
-| **Face Detection** | RetinaFace |
-| **Frontend** | HTML5, Bootstrap 5, JavaScript Vanilla |
-| **Image Processing** | OpenCV, NumPy |
+| Komponen             | Teknologi                              |
+| -------------------- | -------------------------------------- |
+| **Backend**          | Flask (Python)                         |
+| **Database**         | MySQL                                  |
+| **AI/ML**            | DeepFace, ArcFace                      |
+| **Face Detection**   | RetinaFace                             |
+| **Frontend**         | HTML5, Bootstrap 5, JavaScript Vanilla |
+| **Image Processing** | OpenCV, NumPy                          |
 
 ## 📋 Requirements
 
@@ -52,12 +52,14 @@ presensi/
 ## 🚀 Instalasi
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/penggunainternet/Presensi-Deepface.git
 cd Presensi-Deepface
 ```
 
 ### 2. Setup Virtual Environment
+
 ```bash
 python -m venv venv
 # Windows
@@ -67,6 +69,7 @@ source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -74,6 +77,7 @@ pip install -r requirements.txt
 ### 4. Setup Database
 
 **Create Database:**
+
 ```sql
 CREATE DATABASE presensi;
 USE presensi;
@@ -97,7 +101,9 @@ CREATE TABLE absensi (
 ```
 
 ### 5. Konfigurasi Database (app.py)
+
 Edit bagian database connection di `app.py`:
+
 ```python
 def get_db():
     return mysql.connector.connect(
@@ -109,6 +115,7 @@ def get_db():
 ```
 
 ### 6. Jalankan Aplikasi
+
 ```bash
 python app.py
 ```
@@ -118,6 +125,7 @@ Aplikasi akan berjalan di: **http://localhost:5000**
 ## 📖 Cara Penggunaan
 
 ### Admin Panel
+
 1. Akses: http://localhost:5000/admin
 2. Masukkan nama karyawan
 3. Upload foto wajah karyawan
@@ -125,6 +133,7 @@ Aplikasi akan berjalan di: **http://localhost:5000**
 5. Embedding wajah tersimpan di database
 
 ### Presensi User
+
 1. Akses: http://localhost:5000/presensi-user
 2. **Pilih Metode:**
    - **Kamera**: Klik "Ambil Foto & Presensi" - posisikan wajah ke kamera
@@ -134,17 +143,18 @@ Aplikasi akan berjalan di: **http://localhost:5000**
 
 ## 🔧 API Endpoints
 
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| GET | `/admin` | Admin panel registration |
-| POST | `/admin/register` | Register wajah karyawan baru |
-| GET | `/presensi-user` | Halaman presensi user |
-| POST | `/presensi-kamera` | Presensi via kamera (base64) |
-| POST | `/presensi-upload` | Presensi via upload foto |
+| Method | Endpoint           | Deskripsi                    |
+| ------ | ------------------ | ---------------------------- |
+| GET    | `/admin`           | Admin panel registration     |
+| POST   | `/admin/register`  | Register wajah karyawan baru |
+| GET    | `/presensi-user`   | Halaman presensi user        |
+| POST   | `/presensi-kamera` | Presensi via kamera (base64) |
+| POST   | `/presensi-upload` | Presensi via upload foto     |
 
 ## 📊 Database Schema
 
 ### Users Table
+
 ```sql
 users {
   id: INT (Primary Key)
@@ -156,6 +166,7 @@ users {
 ```
 
 ### Attendance Table
+
 ```sql
 absensi {
   id: INT (Primary Key)
@@ -167,8 +178,9 @@ absensi {
 ## 🎯 Alur Kerja Sistem
 
 ### Registrasi Karyawan
+
 ```
-Upload Foto 
+Upload Foto
   ↓
 Ekstraksi Embedding (ArcFace)
   ↓
@@ -178,6 +190,7 @@ Simpan ke Database
 ```
 
 ### Presensi
+
 ```
 Capture/Upload Foto
   ↓
@@ -194,27 +207,31 @@ Jika score < 0.40: Tolak (Wajah tidak dikenali) ✗
 ## ⚙️ Konfigurasi
 
 ### Threshold Similarity
+
 Edit di `app.py` baris threshold:
+
 ```python
 if best_score < 0.40:  # Ubah threshold sesuai kebutuhan
     return jsonify({"status": False, "message": "Wajah tidak dikenali!"})
 ```
 
 ### Model AI
+
 Menggunakan ArcFace untuk embedding:
+
 ```python
 rep = DeepFace.represent(img_path, model_name="ArcFace")
 ```
 
 ## 🐛 Troubleshooting
 
-| Problem | Solusi |
-|---------|--------|
-| `ModuleNotFoundError: No module named 'deepface'` | Run: `pip install deepface` |
-| Database connection error | Cek konfigurasi MySQL & credentials |
-| Camera tidak bisa diakses | Izinkan browser akses kamera |
-| Wajah tidak terdeteksi | Pastikan pencahayaan cukup & wajah jelas |
-| Foto tidak cocok setelah registrasi | Ubah threshold similarity (lebih rendah) |
+| Problem                                           | Solusi                                   |
+| ------------------------------------------------- | ---------------------------------------- |
+| `ModuleNotFoundError: No module named 'deepface'` | Run: `pip install deepface`              |
+| Database connection error                         | Cek konfigurasi MySQL & credentials      |
+| Camera tidak bisa diakses                         | Izinkan browser akses kamera             |
+| Wajah tidak terdeteksi                            | Pastikan pencahayaan cukup & wajah jelas |
+| Foto tidak cocok setelah registrasi               | Ubah threshold similarity (lebih rendah) |
 
 ## 📦 Dependencies
 
@@ -231,24 +248,9 @@ tensorflow==2.13.0
 ## 🔐 Security Note
 
 ⚠️ **Production Deployment:**
+
 - Ubah `debug=True` ke `debug=False`
 - Gunakan WSGI server (Gunicorn, uWSGI)
 - Enkripsi database password
 - Setup HTTPS
 - Validate & sanitize input
-
-## 📝 License
-
-MIT License - Bebas digunakan untuk keperluan apapun
-
-## 👨‍💻 Author
-
-**Presensi Deepface Development Team**
-
-## 📞 Support
-
-Untuk pertanyaan atau issue, silahkan buat issue di repository ini.
-
----
-
-**Made with ❤️ using DeepFace & Flask**
