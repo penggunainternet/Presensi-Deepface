@@ -244,13 +244,3 @@ numpy==1.24.3
 Pillow==10.0.0
 tensorflow==2.13.0
 ```
-
-## 🔐 Security Note
-
-⚠️ **Production Deployment:**
-
-- Ubah `debug=True` ke `debug=False`
-- Gunakan WSGI server (Gunicorn, uWSGI)
-- Enkripsi database password
-- Setup HTTPS
-- Validate & sanitize input
