@@ -12,7 +12,6 @@ Sistem presensi berbasis pengenalan wajah menggunakan teknologi deep learning **
 
 - 👤 **Admin Panel** - Registrasi wajah karyawan baru
 - 📸 **Presensi via Kamera** - Capture wajah langsung dari webcam
-- 📁 **Presensi via Upload** - Upload foto untuk presensi
 - 🧠 **Deep Learning** - Ekstraksi embedding wajah menggunakan ArcFace
 - 📊 **Matching Otomatis** - Pencocokan dengan cosine similarity
 - 🎨 **UI Modern** - Bootstrap 5 dengan design responsif
@@ -128,11 +127,10 @@ Aplikasi akan berjalan di: **http://localhost:5000**
 ### Presensi User
 
 1. Akses: http://localhost:5000/presensi-user
-2. **Pilih Metode:**
-   - **Kamera**: Klik "Ambil Foto & Presensi" - posisikan wajah ke kamera
-   - **Upload**: Pilih file foto dan klik "Upload Foto & Presensi"
-3. Sistem akan mencocokkan wajah dengan database
-4. Jika cocok (similarity > 0.40), presensi tercatat otomatis
+2. Posisikan wajah ke kamera
+3. Klik "Ambil Foto & Presensi"
+4. Sistem akan mencocokkan wajah dengan database
+5. Jika cocok (similarity > 0.40), presensi tercatat otomatis
 
 ## 🔧 API Endpoints
 
@@ -142,7 +140,6 @@ Aplikasi akan berjalan di: **http://localhost:5000**
 | POST   | `/admin/register`  | Register wajah karyawan baru |
 | GET    | `/presensi-user`   | Halaman presensi user        |
 | POST   | `/presensi-kamera` | Presensi via kamera (base64) |
-| POST   | `/presensi-upload` | Presensi via upload foto     |
 
 ## 📊 Database Schema
 

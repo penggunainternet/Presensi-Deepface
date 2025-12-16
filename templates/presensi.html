@@ -85,8 +85,7 @@
         display: block;
         background: #000;
       }
-      .btn-capture,
-      .btn-upload-submit {
+      .btn-capture {
         background: #00aa66;
         border: none;
         border-radius: 10px;
@@ -96,19 +95,16 @@
         transition: all 0.3s ease;
         color: white;
       }
-      .btn-capture:hover,
-      .btn-upload-submit:hover {
+      .btn-capture:hover {
         transform: translateY(-2px);
         background: #008a52;
         box-shadow: 0 8px 25px rgba(0, 170, 102, 0.4);
         color: white;
       }
-      .btn-capture:active,
-      .btn-upload-submit:active {
+      .btn-capture:active {
         transform: translateY(0);
       }
-      .btn-capture:disabled,
-      .btn-upload-submit:disabled {
+      .btn-capture:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
@@ -288,51 +284,6 @@
           <div id="result-camera" class="alert alert-result"></div>
         </div>
       </div>
-
-      <!-- UPLOAD METHOD -->
-      <div class="card-section">
-        <div class="card-header-custom">
-          <i class="bi bi-image"></i> Metode 2: Presensi dengan Upload Foto
-        </div>
-        <div class="card-body-custom">
-          <p class="text-muted mb-4">
-            Upload foto wajah Anda untuk presensi. Gunakan foto yang jelas dan
-            wajah menghadap kamera.
-          </p>
-
-          <form id="uploadForm" enctype="multipart/form-data">
-            <div class="mb-4">
-              <label for="upload" class="form-label">
-                <i class="bi bi-file-image"></i> Pilih Foto
-              </label>
-              <input
-                type="file"
-                class="form-control"
-                id="upload"
-                name="foto"
-                accept="image/*"
-                required
-              />
-              <small class="text-muted d-block mt-2">
-                <i class="bi bi-info-circle"></i> Format: JPG, PNG. Ukuran
-                maksimal: 5MB
-              </small>
-            </div>
-
-            <div class="text-center">
-              <button
-                id="uploadBtn"
-                class="btn btn-upload-submit"
-                type="submit"
-              >
-                <i class="bi bi-cloud-upload"></i> Upload Foto & Presensi
-              </button>
-            </div>
-          </form>
-
-          <div id="result-upload" class="alert alert-result"></div>
-        </div>
-      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -386,40 +337,6 @@
             captureBtn.disabled = false;
             captureBtn.innerHTML =
               '<i class="bi bi-camera"></i> Ambil Foto & Presensi';
-          });
-      };
-
-      // ======================
-      // UPLOAD FOTO
-      // ======================
-      document.getElementById("uploadForm").onsubmit = function (e) {
-        e.preventDefault();
-
-        let uploadBtn = document.getElementById("uploadBtn");
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML =
-          '<span class="spinner-border spinner-border-sm"></span> Memproses...';
-
-        let formData = new FormData();
-        let file = document.getElementById("upload").files[0];
-        formData.append("foto", file);
-
-        fetch("/presensi-upload", { method: "POST", body: formData })
-          .then((res) => res.json())
-          .then((data) => {
-            let alertType = data.status ? "success" : "danger";
-            showAlert("result-upload", data.message, alertType);
-            if (data.status) {
-              document.getElementById("uploadForm").reset();
-            }
-          })
-          .catch((err) => {
-            showAlert("result-upload", "Error: " + err.message, "danger");
-          })
-          .finally(() => {
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML =
-              '<i class="bi bi-cloud-upload"></i> Upload Foto & Presensi';
           });
       };
 

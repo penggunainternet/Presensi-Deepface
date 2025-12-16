@@ -61,11 +61,164 @@ def admin_register():
     db.commit()
 
     return f"""
-        <h3>Registrasi Berhasil!</h3>
-        <p>Nama: {name}</p>
-        <img src='/static/uploads/{filename}' width='200'>
-        <br><br>
-        <a href='/admin'>Kembali</a>
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Registrasi Berhasil</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+        <style>
+            body {{
+                background: #F0F4F8;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }}
+            .success-container {{
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                padding: 40px;
+                max-width: 500px;
+                text-align: center;
+            }}
+            .success-icon {{
+                font-size: 60px;
+                color: #28a745;
+                margin-bottom: 20px;
+            }}
+            .success-title {{
+                color: #0066CC;
+                font-weight: 700;
+                font-size: 28px;
+                margin-bottom: 15px;
+            }}
+            .photo-preview {{
+                margin: 30px 0;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }}
+            .photo-preview img {{
+                width: 100%;
+                max-width: 300px;
+                display: block;
+                margin: 0 auto;
+            }}
+            .user-info {{
+                background: #F8F9FA;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+                border-left: 4px solid #0066CC;
+            }}
+            .user-info label {{
+                font-weight: 600;
+                color: #666;
+                font-size: 12px;
+                text-transform: uppercase;
+                display: block;
+                margin-bottom: 5px;
+            }}
+            .user-info p {{
+                font-size: 18px;
+                color: #333;
+                margin: 0;
+            }}
+            .button-group {{
+                margin-top: 30px;
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }}
+            .btn-back {{
+                background: #0066CC;
+                color: white;
+                border: none;
+                padding: 12px 30px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }}
+            .btn-back:hover {{
+                background: #0052A3;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 102, 204, 0.3);
+                color: white;
+            }}
+            .btn-next {{
+                background: #00AA66;
+                color: white;
+                border: none;
+                padding: 12px 30px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }}
+            .btn-next:hover {{
+                background: #008A52;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 170, 102, 0.3);
+                color: white;
+            }}
+            .success-message {{
+                color: #28a745;
+                font-weight: 600;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="success-container">
+            <div class="success-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            
+            <div class="success-message">
+                <i class="bi bi-check-lg"></i> Registrasi Berhasil!
+            </div>
+            
+            <h1 class="success-title">Karyawan Terdaftar</h1>
+            
+            <div class="user-info">
+                <label>Nama Karyawan</label>
+                <p>{name}</p>
+            </div>
+            
+            <div class="photo-preview">
+                <img src="/static/uploads/{filename}" alt="Foto {name}">
+            </div>
+            
+            <p style="color: #666; font-size: 14px; margin: 20px 0;">
+                <i class="bi bi-info-circle"></i>
+                Wajah karyawan telah berhasil didaftarkan dan disimpan ke database.
+            </p>
+            
+            <div class="button-group">
+                <a href="/admin" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Daftar Lagi
+                </a>
+                <a href="/presensi-user" class="btn-next">
+                    <i class="bi bi-arrow-right"></i> Presensi
+                </a>
+            </div>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+    </html>
     """
 
 
@@ -133,58 +286,6 @@ def presensi_kamera():
             return jsonify({"status": False, "message": "Wajah tidak dikenali!"})
 
         # catat absensi
-        cursor.execute("INSERT INTO absensi (user_id, waktu) VALUES (%s, NOW())",
-                       (best_user["id"],))
-        db.commit()
-
-        return jsonify({
-            "status": True,
-            "message": f"Presensi Berhasil: {best_user['name']}",
-            "score": float(best_score)
-        })
-
-    except Exception as e:
-        return jsonify({"status": False, "message": f"Error: {str(e)}"})
-
-
-# ========================
-#  PRESENSI VIA UPLOAD FOTO
-# ========================
-@app.route("/presensi-upload", methods=["POST"])
-def presensi_upload():
-
-    if "foto" not in request.files:
-        return jsonify({"status": False, "message": "Foto tidak ditemukan!"})
-
-    file = request.files["foto"]
-    temp_path = "temp_user.jpg"
-    file.save(temp_path)
-
-    try:
-        rep = DeepFace.represent(temp_path, model_name="ArcFace")[0]["embedding"]
-        user_embed = np.array(rep)
-
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
-
-        best_user = None
-        best_score = -1
-
-        for row in rows:
-            emb_db = pickle.loads(base64.b64decode(row["embedding"]))
-            emb_db = np.array(emb_db)
-
-            sim = cosine_similarity(user_embed, emb_db)
-
-            if sim > best_score:
-                best_score = sim
-                best_user = row
-
-        if best_score < 0.40:
-            return jsonify({"status": False, "message": "Wajah tidak dikenali!"})
-
         cursor.execute("INSERT INTO absensi (user_id, waktu) VALUES (%s, NOW())",
                        (best_user["id"],))
         db.commit()
