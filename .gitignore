@@ -3,13 +3,14 @@ temp_user.jpg
 *.tmp
 *.log
 
+# Model cache (besar)
+models/
+*.hdf5
+*.pb
+
 # Uploads folder
 static/uploads/*
 !static/uploads/.gitkeep
-
-# AI Models (downloaded automatically)
-models/
-!models/.gitkeep
 
 # Python
 __pycache__/

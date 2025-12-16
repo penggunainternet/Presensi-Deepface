@@ -51,30 +51,21 @@ presensi/
 
 ## 🚀 Instalasi
 
-### 1. Clone Repository
+###  Clone Repository
 
 ```bash
 git clone https://github.com/penggunainternet/Presensi-Deepface.git
 cd Presensi-Deepface
 ```
 
-### 2. Setup Virtual Environment
 
-```bash
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
+###  Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Setup Database
+###  Setup Database
 
 **Create Database:**
 
@@ -100,7 +91,7 @@ CREATE TABLE absensi (
 );
 ```
 
-### 5. Konfigurasi Database (app.py)
+###  Konfigurasi Database (app.py)
 
 Edit bagian database connection di `app.py`:
 
@@ -114,13 +105,15 @@ def get_db():
     )
 ```
 
-### 6. Jalankan Aplikasi
+###  Jalankan Aplikasi
 
 ```bash
 python app.py
 ```
 
 Aplikasi akan berjalan di: **http://localhost:5000**
+
+> **Catatan:** Pada first run, model DeepFace akan di-download (~1-2 GB) dan disimpan di folder `models/` untuk penggunaan selanjutnya. Pastikan koneksi internet stabil.
 
 ## 📖 Cara Penggunaan
 

@@ -7,14 +7,13 @@ import base64
 import os
 import cv2
 from datetime import datetime
+from config import MODEL_CACHE_DIR
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 
-# Setup model cache path untuk menyimpan model lokal
-MODEL_CACHE_PATH = os.path.join(os.getcwd(), "models")
-os.makedirs(MODEL_CACHE_PATH, exist_ok=True)
-os.environ['DEEPFACE_HOME'] = MODEL_CACHE_PATH
+# Set home dir untuk model cache
+os.environ['DEEPFACE_HOME'] = MODEL_CACHE_DIR
 
 
 # ========================
