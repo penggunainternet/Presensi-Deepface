@@ -3,8 +3,9 @@
 Sistem presensi berbasis pengenalan wajah menggunakan teknologi deep learning **DeepFace** dan **ArcFace**. Aplikasi web yang memungkinkan registrasi karyawan dan pencatatan absensi secara otomatis melalui pengenalan wajah.
 
 ![Badge Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![Badge Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)
+![Badge Flask](https://img.shields.io/badge/Flask-3.0-green.svg)
 ![Badge Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
+![Badge DeepFace](https://img.shields.io/badge/DeepFace-1.1-red.svg)
 ![Badge License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## ✨ Fitur Utama
@@ -51,21 +52,20 @@ presensi/
 
 ## 🚀 Instalasi
 
-###  Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/penggunainternet/Presensi-Deepface.git
 cd Presensi-Deepface
 ```
 
-
-###  Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-###  Setup Database
+### Setup Database
 
 **Create Database:**
 
@@ -91,7 +91,7 @@ CREATE TABLE absensi (
 );
 ```
 
-###  Konfigurasi Database (app.py)
+### Konfigurasi Database (app.py)
 
 Edit bagian database connection di `app.py`:
 
@@ -105,7 +105,7 @@ def get_db():
     )
 ```
 
-###  Jalankan Aplikasi
+### Jalankan Aplikasi
 
 ```bash
 python app.py
@@ -113,7 +113,7 @@ python app.py
 
 Aplikasi akan berjalan di: **http://localhost:5000**
 
-> **Catatan:** Pada first run, model DeepFace akan di-download (~1-2 GB) dan disimpan di folder `models/` untuk penggunaan selanjutnya. Pastikan koneksi internet stabil.
+> **Catatan:** Pada first run, model DeepFace akan di-download dan disimpan di folder `models/` untuk penggunaan selanjutnya. Pastikan koneksi internet stabil.
 
 ## 📖 Cara Penggunaan
 
@@ -229,11 +229,14 @@ rep = DeepFace.represent(img_path, model_name="ArcFace")
 ## 📦 Dependencies
 
 ```txt
-Flask==2.3.0
-DeepFace==0.0.67
-mysql-connector-python==8.0.33
-opencv-python==4.7.0.72
-numpy==1.24.3
-Pillow==10.0.0
-tensorflow==2.13.0
+Flask==3.0.0
+DeepFace==1.1.0
+mysql-connector-python==8.2.0
+opencv-python==4.8.1.78
+numpy==1.26.3
+Pillow==10.1.0
+tensorflow==2.14.0
 ```
+
+> **Note:** Dependencies diupdate ke versi terbaru yang kompatibel (Dec 16, 2025).
+> Lihat [COMPATIBILITY.md](COMPATIBILITY.md) untuk detail perubahan.
