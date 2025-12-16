@@ -11,6 +11,11 @@ from datetime import datetime
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 
+# Setup model cache path untuk menyimpan model lokal
+MODEL_CACHE_PATH = os.path.join(os.getcwd(), "models")
+os.makedirs(MODEL_CACHE_PATH, exist_ok=True)
+os.environ['DEEPFACE_HOME'] = MODEL_CACHE_PATH
+
 
 # ========================
 #  DATABASE CONNECT

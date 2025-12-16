@@ -7,6 +7,10 @@ temp_user.jpg
 static/uploads/*
 !static/uploads/.gitkeep
 
+# AI Models (downloaded automatically)
+models/
+!models/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]
