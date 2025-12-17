@@ -242,7 +242,32 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <div class="ms-auto d-flex gap-2">
+          <div class="ms-auto d-flex gap-2 align-items-center">
+            <div style="display: flex; gap: 10px; align-items: center">
+              <label
+                style="
+                  margin: 0;
+                  font-weight: 600;
+                  color: #333;
+                  font-size: 14px;
+                "
+              >
+                Model:
+              </label>
+              <select
+                id="modelSelect"
+                style="
+                  padding: 6px 12px;
+                  border: 1px solid #ddd;
+                  border-radius: 6px;
+                  font-size: 14px;
+                "
+              >
+                <option value="deepface">DeepFace (Original)</option>
+                <option value="tflite">TFLite Float32 (Fast)</option>
+                <option value="tflite_fp16">TFLite FP16 (Very Fast)</option>
+              </select>
+            </div>
             <div class="btn-admin">
               <a href="/admin"> <i class="bi bi-lock"></i> Admin Panel </a>
             </div>
@@ -319,16 +344,25 @@
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         let imageData = canvas.toDataURL("image/jpeg");
+        let modelType = document.getElementById("modelSelect").value;
+
+        let bodyData = new URLSearchParams();
+        bodyData.append("image_data", imageData);
+        bodyData.append("model_type", modelType);
 
         fetch("/presensi-kamera", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: "image_data=" + encodeURIComponent(imageData),
+          body: bodyData.toString(),
         })
           .then((res) => res.json())
           .then((data) => {
             let alertType = data.status ? "success" : "danger";
-            showAlert("result-camera", data.message, alertType);
+            let fullMessage = data.message;
+            if (data.status && data.model) {
+              fullMessage += ` (Model: ${data.model})`;
+            }
+            showAlert("result-camera", fullMessage, alertType);
           })
           .catch((err) => {
             showAlert("result-camera", "Error: " + err.message, "danger");

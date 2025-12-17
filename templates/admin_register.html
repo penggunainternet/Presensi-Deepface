@@ -157,6 +157,26 @@
               </small>
             </div>
 
+            <div class="mb-4">
+              <label for="modelType" class="form-label">
+                <i class="bi bi-cpu"></i> Model Extraction
+              </label>
+              <select
+                class="form-control"
+                id="modelType"
+                name="model_type"
+                required
+              >
+                <option value="deepface">DeepFace (Original)</option>
+                <option value="tflite">TFLite Float32 (Fast)</option>
+                <option value="tflite_fp16">TFLite FP16 (Very Fast)</option>
+              </select>
+              <small class="text-muted d-block mt-2">
+                <i class="bi bi-info-circle"></i> Pilih model yang sama seperti
+                yang digunakan saat presensi
+              </small>
+            </div>
+
             <button type="submit" class="btn btn-register w-100 text-white">
               <i class="bi bi-check-circle"></i> Daftarkan Karyawan
             </button>

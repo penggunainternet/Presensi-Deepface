@@ -8,12 +8,57 @@ import os
 import cv2
 from datetime import datetime
 from config import MODEL_CACHE_DIR
+import tensorflow as tf
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 
 # Set home dir untuk model cache
 os.environ['DEEPFACE_HOME'] = MODEL_CACHE_DIR
+
+# Global model instances
+tflite_interpreter = None
+tflite_fp16_interpreter = None
+tflite_available = False
+tflite_fp16_available = False
+
+def load_tflite_model():
+    """Load TFLite model (Float32)"""
+    global tflite_interpreter, tflite_available
+    try:
+        tflite_path = "models/arcface.tflite"  # Non-quantized version
+        if os.path.exists(tflite_path):
+            tflite_interpreter = tf.lite.Interpreter(model_path=tflite_path)
+            tflite_interpreter.allocate_tensors()
+            tflite_available = True
+            print("[+] TFLite model loaded successfully")
+        else:
+            print("[!] TFLite model not found")
+            tflite_available = False
+    except Exception as e:
+        print(f"[!] Error loading TFLite: {e}")
+        tflite_available = False
+
+def load_tflite_fp16_model():
+    """Load TFLite FP16 quantized model"""
+    global tflite_fp16_interpreter, tflite_fp16_available
+    try:
+        tflite_fp16_path = "models/arcface_fp16.tflite"
+        if os.path.exists(tflite_fp16_path):
+            tflite_fp16_interpreter = tf.lite.Interpreter(model_path=tflite_fp16_path)
+            tflite_fp16_interpreter.allocate_tensors()
+            tflite_fp16_available = True
+            print("[+] TFLite FP16 model loaded successfully")
+        else:
+            print("[!] TFLite FP16 model not found")
+            tflite_fp16_available = False
+    except Exception as e:
+        print(f"[!] Error loading TFLite FP16: {e}")
+        tflite_fp16_available = False
+
+# Load TFLite models on startup
+load_tflite_model()
+load_tflite_fp16_model()
 
 
 # ========================
@@ -28,8 +73,73 @@ def get_db():
     )
 
 # ========================
+#  MODEL INFERENCE HELPERS
+# ========================
+def extract_embedding_tflite(img_path):
+    """Extract embedding menggunakan TFLite model (Float32)"""
+    try:
+        img = cv2.imread(img_path) if isinstance(img_path, str) else img_path
+        img = cv2.resize(img, (112, 112))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = img.astype(np.float32) / 255.0
+        
+        input_details = tflite_interpreter.get_input_details()
+        output_details = tflite_interpreter.get_output_details()
+        
+        img_batch = np.expand_dims(img, axis=0)
+        tflite_interpreter.set_tensor(input_details[0]['index'], img_batch)
+        tflite_interpreter.invoke()
+        
+        embedding = tflite_interpreter.get_tensor(output_details[0]['index'])[0]
+        return embedding
+    except Exception as e:
+        print(f"[!] TFLite extraction error: {e}")
+        return None
+
+def extract_embedding_deepface(img_path):
+    """Extract embedding menggunakan DeepFace original"""
+    try:
+        rep = DeepFace.represent(
+            img_path=img_path,
+            model_name="ArcFace",
+            detector_backend="retinaface",
+            enforce_detection=False
+        )
+        if len(rep) > 0:
+            return np.array(rep[0]["embedding"])
+        return None
+    except Exception as e:
+        print(f"[!] DeepFace extraction error: {e}")
+        return None
+
+def extract_embedding_tflite_fp16(img_path):
+    """Extract embedding menggunakan TFLite FP16 quantized model"""
+    try:
+        img = cv2.imread(img_path) if isinstance(img_path, str) else img_path
+        img = cv2.resize(img, (112, 112))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = img.astype(np.float32) / 255.0
+        
+        input_details = tflite_fp16_interpreter.get_input_details()
+        output_details = tflite_fp16_interpreter.get_output_details()
+        
+        img_batch = np.expand_dims(img, axis=0)
+        tflite_fp16_interpreter.set_tensor(input_details[0]['index'], img_batch)
+        tflite_fp16_interpreter.invoke()
+        
+        embedding = tflite_fp16_interpreter.get_tensor(output_details[0]['index'])[0]
+        return embedding
+    except Exception as e:
+        print(f"[!] TFLite FP16 extraction error: {e}")
+        return None
+
+# ========================
 #  HALAMAN ADMIN REGISTER
 # ========================
+@app.route("/")
+def index():
+    return render_template("presensi.html", tflite_available=tflite_available)
+
 @app.route("/admin")
 def admin_page():
     return render_template("admin_register.html")
@@ -40,14 +150,25 @@ def admin_register():
 
     name = request.form["name"]
     photo = request.files["photo"]
+    model_type = request.form.get("model_type", "deepface")  # deepface or tflite
 
     filename = name.replace(" ", "_") + ".jpg"
     path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     photo.save(path)
 
-    # Ekstraksi embedding
+    # Ekstraksi embedding berdasarkan model type
     try:
-        rep = DeepFace.represent(path, model_name="ArcFace")[0]["embedding"]
+        if model_type == "tflite" and tflite_available:
+            rep = extract_embedding_tflite(path)
+        elif model_type == "tflite_fp16" and tflite_fp16_available:
+            rep = extract_embedding_tflite_fp16(path)
+        else:
+            rep = extract_embedding_deepface(path)
+        
+        if rep is None or len(rep) == 0:
+            return f"Error deteksi wajah! Wajah tidak terdeteksi dengan model {model_type}."
+        
+        rep = np.array(rep)
     except Exception as e:
         return f"Error deteksi wajah! <br>Detail: {e}"
 
@@ -245,23 +366,26 @@ def presensi_kamera():
 
     try:
         image_data = request.form["image_data"]
+        model_type = request.form.get("model_type", "deepface")  # deepface or tflite
+        
         image_data = image_data.split(",")[1]
         img_bytes = base64.b64decode(image_data)
 
         nparr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-        rep = DeepFace.represent(
-            img_path=img,
-            model_name="ArcFace",
-            detector_backend="retinaface",
-            enforce_detection=False
-        )
+        # Extract embedding berdasarkan model type
+        if model_type == "tflite" and tflite_available:
+            user_embed = extract_embedding_tflite(img)
+        elif model_type == "tflite_fp16" and tflite_fp16_available:
+            user_embed = extract_embedding_tflite_fp16(img)
+        else:
+            user_embed = extract_embedding_deepface(img)
 
-        if len(rep) == 0:
+        if user_embed is None or len(user_embed) == 0:
             return jsonify({"status": False, "message": "Wajah tidak terdeteksi!"})
 
-        user_embed = np.array(rep[0]["embedding"])
+        user_embed = np.array(user_embed)
 
         # ambil user DB
         db = get_db()
@@ -293,7 +417,8 @@ def presensi_kamera():
         return jsonify({
             "status": True,
             "message": f"Presensi Berhasil: {best_user['name']}",
-            "score": float(best_score)
+            "score": float(best_score),
+            "model": model_type
         })
 
     except Exception as e:
