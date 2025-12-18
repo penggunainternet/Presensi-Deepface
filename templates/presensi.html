@@ -362,7 +362,15 @@
             if (data.status && data.model) {
               fullMessage += ` (Model: ${data.model})`;
             }
+            if (data.score !== undefined) {
+              fullMessage += ` [Score: ${(data.score * 100).toFixed(2)}%]`;
+            }
             showAlert("result-camera", fullMessage, alertType);
+            
+            // Tampilkan gambar dengan bounding box jika ada
+            if (data.image_with_bbox) {
+              displayBoundingBoxImage(data.image_with_bbox);
+            }
           })
           .catch((err) => {
             showAlert("result-camera", "Error: " + err.message, "danger");
@@ -386,6 +394,18 @@
         } else {
           alertElement.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${message}`;
         }
+      }
+
+      function displayBoundingBoxImage(imageBase64) {
+        let container = document.getElementById("result-camera");
+        let img = document.createElement("img");
+        img.src = imageBase64;
+        img.style.maxWidth = "100%";
+        img.style.marginTop = "15px";
+        img.style.borderRadius = "8px";
+        img.style.border = "2px solid #0066cc";
+        
+        container.appendChild(img);
       }
     </script>
   </body>

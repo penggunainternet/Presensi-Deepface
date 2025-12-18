@@ -359,6 +359,85 @@ def cosine_similarity(a, b):
 
 
 # ========================
+#  FACE DETECTION HELPERS
+# ========================
+def detect_face_with_bbox(img):
+    """
+    Detect face dan return koordinat bounding box
+    Menggunakan OpenCV Cascade atau DeepFace detector
+    
+    Returns:
+        List of (x, y, w, h) tuples
+    """
+    try:
+        # Pakai DeepFace detector (RetinaFace)
+        faces = DeepFace.extract_faces(
+            img_path=img,
+            detector_backend="opencv",  # Bisa ganti ke "retinaface" untuk lebih akurat
+            enforce_detection=False,
+            align=False
+        )
+        
+        face_coords = []
+        for face_dict in faces:
+            # face_dict contains {'facial_area': {...}, 'confidence': ...}
+            facial_area = face_dict.get('facial_area', {})
+            x = facial_area.get('x', 0)
+            y = facial_area.get('y', 0)
+            w = facial_area.get('w', 0)
+            h = facial_area.get('h', 0)
+            
+            if w > 0 and h > 0:
+                face_coords.append((x, y, w, h))
+        
+        return face_coords
+    
+    except Exception as e:
+        print(f"[!] Face detection error: {e}")
+        # Fallback ke OpenCV Cascade
+        try:
+            face_cascade = cv2.CascadeClassifier(
+                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            )
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+            
+            return [(x, y, w, h) for (x, y, w, h) in faces]
+        except:
+            return []
+
+
+def draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=2):
+    """
+    Draw bounding boxes pada gambar
+    
+    Args:
+        img: OpenCV image
+        face_coords: List of (x, y, w, h) tuples
+        color: RGB color tuple
+        thickness: Line thickness
+    
+    Returns:
+        Image dengan bounding boxes
+    """
+    img_copy = img.copy()
+    
+    for (x, y, w, h) in face_coords:
+        # Draw rectangle
+        cv2.rectangle(img_copy, (x, y), (x + w, y + h), color, thickness)
+        
+        # Draw filled rectangle untuk background text
+        label_height = 25
+        cv2.rectangle(img_copy, (x, y - label_height), (x + 150, y), color, -1)
+        
+        # Put text
+        cv2.putText(img_copy, "Face Detected", (x + 5, y - 8),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    
+    return img_copy
+
+
+# ========================
 #  PRESENSI VIA KAMERA (BASE64)
 # ========================
 @app.route("/presensi-kamera", methods=["POST"])
@@ -374,6 +453,14 @@ def presensi_kamera():
         nparr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+        # Detect faces dan draw bounding boxes
+        face_coords = detect_face_with_bbox(img)
+        img_with_bbox = draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=3)
+        
+        # Convert back to base64 untuk send ke frontend
+        _, buffer = cv2.imencode('.jpg', img_with_bbox)
+        img_bbox_b64 = base64.b64encode(buffer).decode('utf-8')
+
         # Extract embedding berdasarkan model type
         if model_type == "tflite" and tflite_available:
             user_embed = extract_embedding_tflite(img)
@@ -383,7 +470,11 @@ def presensi_kamera():
             user_embed = extract_embedding_deepface(img)
 
         if user_embed is None or len(user_embed) == 0:
-            return jsonify({"status": False, "message": "Wajah tidak terdeteksi!"})
+            return jsonify({
+                "status": False, 
+                "message": "Wajah tidak terdeteksi!",
+                "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}"
+            })
 
         user_embed = np.array(user_embed)
 
@@ -407,7 +498,12 @@ def presensi_kamera():
                 best_user = row
 
         if best_score < 0.40:
-            return jsonify({"status": False, "message": "Wajah tidak dikenali!"})
+            return jsonify({
+                "status": False, 
+                "message": "Wajah tidak dikenali!",
+                "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}",
+                "score": float(best_score)
+            })
 
         # catat absensi
         cursor.execute("INSERT INTO absensi (user_id, waktu) VALUES (%s, NOW())",
@@ -418,7 +514,8 @@ def presensi_kamera():
             "status": True,
             "message": f"Presensi Berhasil: {best_user['name']}",
             "score": float(best_score),
-            "model": model_type
+            "model": model_type,
+            "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}"
         })
 
     except Exception as e:
