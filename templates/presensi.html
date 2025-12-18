@@ -366,7 +366,7 @@
               fullMessage += ` [Score: ${(data.score * 100).toFixed(2)}%]`;
             }
             showAlert("result-camera", fullMessage, alertType);
-            
+
             // Tampilkan gambar dengan bounding box jika ada
             if (data.image_with_bbox) {
               displayBoundingBoxImage(data.image_with_bbox);
@@ -404,7 +404,7 @@
         img.style.marginTop = "15px";
         img.style.borderRadius = "8px";
         img.style.border = "2px solid #0066cc";
-        
+
         container.appendChild(img);
       }
     </script>
