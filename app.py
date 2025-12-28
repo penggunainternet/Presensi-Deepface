@@ -26,12 +26,16 @@ def load_tflite_model():
     """Load TFLite model (Float32)"""
     global tflite_interpreter, tflite_available
     try:
-        tflite_path = "models/arcface.tflite"  # Non-quantized version
+        # Try v2 first, fallback to original
+        tflite_path = "models/arcface_v2.tflite"
+        if not os.path.exists(tflite_path):
+            tflite_path = "models/arcface.tflite"
+            
         if os.path.exists(tflite_path):
             tflite_interpreter = tf.lite.Interpreter(model_path=tflite_path)
             tflite_interpreter.allocate_tensors()
             tflite_available = True
-            print("[+] TFLite model loaded successfully")
+            print(f"[+] TFLite model loaded: {tflite_path}")
         else:
             print("[!] TFLite model not found")
             tflite_available = False
