@@ -288,6 +288,9 @@
 
         // Capture Handler
         captureBtn.addEventListener("click", () => {
+          // Start timer
+          let startTime = Date.now();
+
           captureBtn.disabled = true;
           captureBtn.innerHTML =
             '<span class="spinner-border spinner-border-sm"></span> Memproses...';
@@ -310,7 +313,12 @@
           })
             .then((r) => r.json())
             .then((d) => {
-              showAlert(d.message, d.status ? "success" : "danger");
+              // Calculate elapsed time
+              let endTime = Date.now();
+              let duration = ((endTime - startTime) / 1000).toFixed(2);
+              let message = d.message + ` (Waktu: ${duration}s)`;
+
+              showAlert(message, d.status ? "success" : "danger");
               if (d.image_with_bbox) displayBoundingBoxImage(d.image_with_bbox);
               if (d.results?.length) displayFaceResults(d.results);
             })
