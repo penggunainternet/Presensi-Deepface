@@ -1,9 +1,9 @@
 Flask==3.0.0
-DeepFace==1.1.0
+DeepFace==0.0.96
 mysql-connector-python==8.2.0
 opencv-python==4.8.1.78
-numpy==1.26.3
+numpy==1.24.3
 Pillow==10.1.0
-tensorflow==2.14.0
+tensorflow==2.13.1
 python-dotenv==1.0.0
 gunicorn==21.2.0

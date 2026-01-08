@@ -1,6 +1,7 @@
 # 🚀 Railway Deployment Guide - Sistem Presensi Wajah
 
 ## Prerequisites
+
 - GitHub Account (push code ke GitHub dulu)
 - Railway Account (https://railway.app)
 - MySQL Database (PlanetScale atau railway MySQL add-on)
@@ -26,23 +27,27 @@ git push -u origin main
 ## Step 2: Setup di Railway
 
 ### 2.1 Login ke Railway
+
 1. Buka https://railway.app
 2. Klik "Login"
 3. Pilih "GitHub" login
 4. Authorize Railway
 
 ### 2.2 Create New Project
+
 1. Klik "Create New Project"
 2. Pilih "Deploy from GitHub repo"
 3. Pilih repository `presensi`
 4. Railway akan auto-detect Flask app
 
 ### 2.3 Add MySQL Database
+
 1. Di Railway Dashboard, klik "Add Service"
 2. Pilih "Database" → "MySQL"
 3. Railway akan auto-create MySQL instance
 
 ### 2.4 Configure Environment Variables
+
 1. Di project settings, buka "Variables"
 2. Add variables berdasarkan `.env.example`:
 
@@ -58,6 +63,7 @@ PORT=5000
 ```
 
 Cara dapat credentials MySQL dari Railway:
+
 - Klik MySQL service di dashboard
 - Buka tab "Connect"
 - Copy nilai Host, Username, Password
@@ -65,6 +71,7 @@ Cara dapat credentials MySQL dari Railway:
 ### 2.5 Create Database & Tables
 
 Di Railway MySQL console, jalankan SQL init:
+
 ```sql
 CREATE DATABASE IF NOT EXISTS presensi;
 USE presensi;
@@ -108,15 +115,18 @@ CREATE INDEX idx_user_id ON absensi(user_id);
 ## Troubleshooting
 
 ### Build Failed: "ModuleNotFoundError"
+
 - Pastikan `requirements.txt` lengkap
 - Railway harus install semua dependencies
 
 ### Runtime Error: "DB Connection Failed"
+
 - Cek environment variables DB_HOST, DB_USER, DB_PASSWORD
 - Pastikan MySQL service sudah running di Railway
 - Cek koneksi ke database
 
 ### TensorFlow Too Large
+
 - Railway free tier mungkin slow download TF (2GB)
 - Solusi: Gunakan lighter model atau upgrade plan
 
@@ -125,25 +135,32 @@ CREATE INDEX idx_user_id ON absensi(user_id);
 ## Production Tips
 
 ### 1. Security
+
 ```env
 FLASK_ENV=production
 FLASK_DEBUG=0
 ```
+
 Jangan set ini ke debug/development!
 
 ### 2. Model Optimization
+
 Gunakan `arcface_fp16.tflite` saja (lebih ringan):
+
 - File size: ~50 MB
 - Memory: ~200 MB saat runtime
 - Speed: ~80-100ms per embedding
 
 ### 3. Monitoring
+
 - Railway Dashboard → view logs
 - Cek "Deployments" tab untuk history
 - Monitor CPU/Memory usage
 
 ### 4. Backup Database
+
 Railway MySQL free tier limited. Backup regular:
+
 ```bash
 mysqldump -h [HOST] -u [USER] -p[PASSWORD] presensi > backup.sql
 ```
@@ -151,6 +168,7 @@ mysqldump -h [HOST] -u [USER] -p[PASSWORD] presensi > backup.sql
 ---
 
 ## Cost Estimate
+
 - **Free Tier**: $0/bulan (30 hari trial + $5 credit)
 - **Setelah free**: ~$5-10/bulan (tergantung usage)
 - **Paid Plan**: Mulai $5/bulan per service
@@ -158,6 +176,7 @@ mysqldump -h [HOST] -u [USER] -p[PASSWORD] presensi > backup.sql
 ---
 
 ## Next Steps
+
 1. Connect code ke GitHub
 2. Setup Railway account & MySQL
 3. Configure env variables
@@ -165,4 +184,3 @@ mysqldump -h [HOST] -u [USER] -p[PASSWORD] presensi > backup.sql
 5. Test app di production URL
 
 **Questions?** Check Railway docs: https://docs.railway.app
-
