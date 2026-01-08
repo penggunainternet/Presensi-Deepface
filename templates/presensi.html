@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Presensi Wajah - Sistem Absensi</title>
+    <title>Presensi Wajah</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -14,22 +14,19 @@
     />
     <style>
       body {
-        background: #ffffff;
+        background: #fff;
         min-height: 100vh;
         padding: 20px 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-family: "Segoe UI";
       }
       .navbar-custom {
-        background: rgba(255, 255, 255, 0.95) !important;
+        background: rgba(255, 255, 255, 0.95);
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
       .navbar-brand {
         font-weight: 700;
         font-size: 20px;
         color: #0066cc !important;
-      }
-      .navbar-brand i {
-        margin-right: 8px;
       }
       .container-main {
         max-width: 900px;
@@ -45,11 +42,6 @@
       .page-title h1 {
         font-size: 36px;
         margin-bottom: 10px;
-      }
-      .page-title p {
-        font-size: 16px;
-        opacity: 0.9;
-        color: #0066cc;
       }
       .card-section {
         background: white;
@@ -85,15 +77,17 @@
         display: block;
         background: #000;
       }
+      #canvas {
+        display: none;
+      }
       .btn-capture {
         background: #00aa66;
         border: none;
         border-radius: 10px;
         padding: 14px 30px;
         font-weight: 600;
-        font-size: 16px;
-        transition: all 0.3s ease;
         color: white;
+        transition: all 0.3s;
       }
       .btn-capture:hover {
         transform: translateY(-2px);
@@ -101,53 +95,19 @@
         box-shadow: 0 8px 25px rgba(0, 170, 102, 0.4);
         color: white;
       }
-      .btn-capture:active {
-        transform: translateY(0);
-      }
       .btn-capture:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
-      }
-      .form-label {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .form-control {
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 12px 16px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-      }
-      .form-control:focus {
-        border-color: #00aa66;
-        box-shadow: 0 0 0 0.2rem rgba(0, 170, 102, 0.15);
-      }
-      .form-control::file-selector-button {
-        background: #f5f5f5;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 16px;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-      .form-control::file-selector-button:hover {
-        background: #e0e0e0;
       }
       .alert-result {
         margin-top: 25px;
         border-radius: 10px;
         border: none;
         display: none;
-        animation: slideDown 0.3s ease;
       }
       .alert-result.show {
         display: block;
+        animation: slideDown 0.3s;
       }
       @keyframes slideDown {
         from {
@@ -159,45 +119,15 @@
           transform: translateY(0);
         }
       }
-      .spinner-border-sm {
-        width: 18px;
-        height: 18px;
-        margin-right: 8px;
-      }
-      .divider {
-        position: relative;
-        text-align: center;
-        margin: 30px 0 25px;
-      }
-      .divider::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: #e0e0e0;
-      }
-      .divider span {
-        background: white;
-        padding: 0 15px;
-        position: relative;
-        color: #666;
-        font-weight: 600;
-      }
       .btn-admin {
         background: #0066cc;
         border: none;
         border-radius: 8px;
         padding: 10px 20px;
         font-size: 14px;
-        text-align: center;
-        transition: all 0.3s ease;
       }
       .btn-admin:hover {
-        transform: translateY(-2px);
         background: #0052a3;
-        box-shadow: 0 5px 15px rgba(0, 102, 204, 0.3);
       }
       .btn-admin a {
         color: white;
@@ -206,33 +136,14 @@
         align-items: center;
         gap: 6px;
       }
-      .btn-admin a:hover {
-        color: white;
-      }
-      canvas {
-        display: none;
-      }
-
-      @media (max-width: 768px) {
-        .page-title h1 {
-          font-size: 28px;
-        }
-        .card-body-custom {
-          padding: 20px;
-        }
-        .video-container {
-          max-width: 100%;
-        }
-      }
     </style>
   </head>
   <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top">
       <div class="container-fluid">
-        <span class="navbar-brand">
-          <i class="bi bi-camera-video"></i> Sistem Presensi Wajah
-        </span>
+        <span class="navbar-brand"
+          ><i class="bi bi-camera-video"></i> Sistem Presensi Wajah</span
+        >
         <button
           class="navbar-toggler"
           type="button"
@@ -251,9 +162,8 @@
                   color: #333;
                   font-size: 14px;
                 "
+                >Model:</label
               >
-                Model:
-              </label>
               <select
                 id="modelSelect"
                 style="
@@ -263,39 +173,37 @@
                   font-size: 14px;
                 "
               >
-                <option value="deepface">DeepFace (Original)</option>
-                <option value="tflite">TFLite Float32 (Fast)</option>
+                <option value="deepface">DeepFace</option>
+                <option value="tflite">TFLite (Fast)</option>
                 <option value="tflite_fp16">TFLite FP16 (Very Fast)</option>
               </select>
             </div>
             <div class="btn-admin">
-              <a href="/admin"> <i class="bi bi-lock"></i> Admin Panel </a>
+              <a href="/admin"><i class="bi bi-lock"></i> Admin</a>
             </div>
           </div>
         </div>
       </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container-main">
       <div class="page-title">
         <h1><i class="bi bi-person-check-fill"></i> Presensi Wajah</h1>
-        <p>Silakan pilih metode presensi di bawah ini</p>
+        <p>Arahkan wajah ke kamera untuk presensi</p>
       </div>
 
-      <!-- CAMERA METHOD -->
       <div class="card-section">
         <div class="card-header-custom">
-          <i class="bi bi-camera-fill"></i> Metode 1: Presensi dengan Kamera
+          <i class="bi bi-camera-fill"></i> Presensi dengan Kamera
         </div>
         <div class="card-body-custom">
           <p class="text-muted mb-4">
-            Arahkan wajah ke kamera untuk mengambil foto presensi. Pastikan
-            pencahayaan cukup dan wajah terlihat jelas.
+            Arahkan wajah ke kamera. Pastikan pencahayaan cukup dan wajah
+            terlihat jelas.
           </p>
 
           <div class="video-container">
-            <video id="video" autoplay playsinline></video>
+            <video id="video" autoplay playsinline muted></video>
           </div>
 
           <div class="text-center mb-3">
@@ -305,7 +213,6 @@
           </div>
 
           <canvas id="canvas" width="400" height="300"></canvas>
-
           <div id="result-camera" class="alert alert-result"></div>
         </div>
       </div>
@@ -314,99 +221,107 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-      // ======================
-      // CAMERA
-      // ======================
-      let video = document.getElementById("video");
-      let captureBtn = document.getElementById("captureBtn");
-
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          video.srcObject = stream;
-        })
-        .catch((err) => {
-          showAlert(
-            "result-camera",
-            "Error: Tidak bisa mengakses kamera. " + err.message,
-            "danger"
-          );
-          captureBtn.disabled = true;
-        });
-
-      captureBtn.onclick = function () {
-        captureBtn.disabled = true;
-        captureBtn.innerHTML =
-          '<span class="spinner-border spinner-border-sm"></span> Memproses...';
-
-        let canvas = document.getElementById("canvas");
-        let context = canvas.getContext("2d");
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        let imageData = canvas.toDataURL("image/jpeg");
-        let modelType = document.getElementById("modelSelect").value;
-
-        let bodyData = new URLSearchParams();
-        bodyData.append("image_data", imageData);
-        bodyData.append("model_type", modelType);
-
-        fetch("/presensi-kamera", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: bodyData.toString(),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            let alertType = data.status ? "success" : "danger";
-            let fullMessage = data.message;
-            if (data.status && data.model) {
-              fullMessage += ` (Model: ${data.model})`;
-            }
-            if (data.score !== undefined) {
-              fullMessage += ` [Score: ${(data.score * 100).toFixed(2)}%]`;
-            }
-            showAlert("result-camera", fullMessage, alertType);
-
-            // Tampilkan gambar dengan bounding box jika ada
-            if (data.image_with_bbox) {
-              displayBoundingBoxImage(data.image_with_bbox);
-            }
-          })
-          .catch((err) => {
-            showAlert("result-camera", "Error: " + err.message, "danger");
-          })
-          .finally(() => {
-            captureBtn.disabled = false;
-            captureBtn.innerHTML =
-              '<i class="bi bi-camera"></i> Ambil Foto & Presensi';
-          });
-      };
-
-      // ======================
-      // HELPER FUNCTIONS
-      // ======================
-      function showAlert(elementId, message, type) {
-        let alertElement = document.getElementById(elementId);
-        alertElement.className = `alert alert-${type} alert-result show`;
-
-        if (type === "success") {
-          alertElement.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
-        } else {
-          alertElement.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${message}`;
-        }
+      // Helper Functions
+      function showAlert(msg, type) {
+        let el = document.getElementById("result-camera");
+        el.className = `alert alert-${type} alert-result show`;
+        el.innerHTML =
+          type === "success"
+            ? `<i class="bi bi-check-circle-fill"></i> ${msg}`
+            : `<i class="bi bi-exclamation-circle-fill"></i> ${msg}`;
       }
 
-      function displayBoundingBoxImage(imageBase64) {
+      function displayBoundingBoxImage(b64) {
         let container = document.getElementById("result-camera");
         let img = document.createElement("img");
-        img.src = imageBase64;
-        img.style.maxWidth = "100%";
-        img.style.marginTop = "15px";
-        img.style.borderRadius = "8px";
-        img.style.border = "2px solid #0066cc";
-
+        img.src = b64;
+        img.style.cssText =
+          "max-width:100%;margin-top:15px;border-radius:8px;border:2px solid #0066cc";
         container.appendChild(img);
       }
+
+      function displayFaceResults(results) {
+        if (!results || !results.length) return;
+        let container = document.getElementById("result-camera");
+        let div = document.createElement("div");
+        div.style.marginTop = "20px";
+        results.forEach((r) => {
+          let card = document.createElement("div");
+          card.style.cssText = `padding:12px;margin-bottom:10px;border-radius:6px;background:${
+            r.status ? "#d4edda" : "#f8d7da"
+          };border:2px solid ${r.status ? "#28a745" : "#f5c6cb"}`;
+          card.innerHTML = `<strong style="color:${
+            r.status ? "#155724" : "#721c24"
+          }">${r.status ? "✓" : "✗"} ${
+            r.name
+          }</strong><br><small style="color:${
+            r.status ? "#155724" : "#721c24"
+          }">Face ${r.face_num} | Score: ${(r.score * 100).toFixed(2)}% | ${
+            r.status ? "Dikenali" : "Tidak Dikenali"
+          }</small>`;
+          div.appendChild(card);
+        });
+        container.appendChild(div);
+      }
+
+      // Main Code
+      let video, captureBtn;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        video = document.getElementById("video");
+        captureBtn = document.getElementById("captureBtn");
+
+        // Request Camera
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { width: { ideal: 400 }, height: { ideal: 300 } },
+            audio: false,
+          })
+          .then((stream) => {
+            video.srcObject = stream;
+            video.play();
+          })
+          .catch((e) => {
+            showAlert("Kamera error: " + e.message, "danger");
+            captureBtn.disabled = true;
+          });
+
+        // Capture Handler
+        captureBtn.addEventListener("click", () => {
+          captureBtn.disabled = true;
+          captureBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm"></span> Memproses...';
+
+          let canvas = document.getElementById("canvas");
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, 400, 300);
+
+          let data = new URLSearchParams();
+          data.append("image_data", canvas.toDataURL("image/jpeg"));
+          data.append(
+            "model_type",
+            document.getElementById("modelSelect").value
+          );
+
+          fetch("/presensi-kamera", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: data,
+          })
+            .then((r) => r.json())
+            .then((d) => {
+              showAlert(d.message, d.status ? "success" : "danger");
+              if (d.image_with_bbox) displayBoundingBoxImage(d.image_with_bbox);
+              if (d.results?.length) displayFaceResults(d.results);
+            })
+            .catch((e) => showAlert("Error: " + e.message, "danger"))
+            .finally(() => {
+              captureBtn.disabled = false;
+              captureBtn.innerHTML =
+                '<i class="bi bi-camera"></i> Ambil Foto & Presensi';
+            });
+        });
+      });
     </script>
   </body>
 </html>

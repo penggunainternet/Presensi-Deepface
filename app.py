@@ -144,6 +144,10 @@ def extract_embedding_tflite_fp16(img_path):
 def index():
     return render_template("presensi.html", tflite_available=tflite_available)
 
+@app.route("/test-camera")
+def test_camera():
+    return render_template("test_camera.html")
+
 @app.route("/admin")
 def admin_page():
     return render_template("admin_register.html")
@@ -411,13 +415,14 @@ def detect_face_with_bbox(img):
             return []
 
 
-def draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=2):
+def draw_bounding_boxes(img, face_coords, face_info=None, color=(0, 255, 0), thickness=2):
     """
-    Draw bounding boxes pada gambar
+    Draw bounding boxes pada gambar dengan label berdasarkan face_info
     
     Args:
         img: OpenCV image
         face_coords: List of (x, y, w, h) tuples
+        face_info: List of dicts dengan info masing-masing face (opsional)
         color: RGB color tuple
         thickness: Line thickness
     
@@ -426,7 +431,7 @@ def draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=2):
     """
     img_copy = img.copy()
     
-    for (x, y, w, h) in face_coords:
+    for idx, (x, y, w, h) in enumerate(face_coords):
         # Draw rectangle
         cv2.rectangle(img_copy, (x, y), (x + w, y + h), color, thickness)
         
@@ -434,11 +439,44 @@ def draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=2):
         label_height = 25
         cv2.rectangle(img_copy, (x, y - label_height), (x + 150, y), color, -1)
         
+        # Buat label berdasarkan face_info atau hanya nomor urut
+        if face_info and idx < len(face_info):
+            label = f"Face {idx + 1}: {face_info[idx].get('name', '?')}"
+        else:
+            label = f"Face {idx + 1}"
+        
         # Put text
-        cv2.putText(img_copy, "Face Detected", (x + 5, y - 8),
+        cv2.putText(img_copy, label, (x + 5, y - 8),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
     
     return img_copy
+
+
+def extract_embedding_from_face_area(img, x, y, w, h, model_type="deepface"):
+    """
+    Extract embedding dari area wajah spesifik
+    
+    Args:
+        img: OpenCV image (numpy array)
+        x, y, w, h: Koordinat dan ukuran face area
+        model_type: Tipe model yang digunakan
+    
+    Returns:
+        embedding array atau None
+    """
+    try:
+        # Crop face area
+        face_area = img[y:y+h, x:x+w]
+        
+        if model_type == "tflite" and tflite_available:
+            return extract_embedding_tflite(face_area)
+        elif model_type == "tflite_fp16" and tflite_fp16_available:
+            return extract_embedding_tflite_fp16(face_area)
+        else:
+            return extract_embedding_deepface(face_area)
+    except Exception as e:
+        print(f"[!] Error extracting embedding from face area: {e}")
+        return None
 
 
 # ========================
@@ -457,73 +495,103 @@ def presensi_kamera():
         nparr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-        # Detect faces dan draw bounding boxes
+        # Detect faces
         face_coords = detect_face_with_bbox(img)
-        img_with_bbox = draw_bounding_boxes(img, face_coords, color=(0, 255, 0), thickness=3)
         
-        # Convert back to base64 untuk send ke frontend
-        _, buffer = cv2.imencode('.jpg', img_with_bbox)
-        img_bbox_b64 = base64.b64encode(buffer).decode('utf-8')
-
-        # Extract embedding berdasarkan model type
-        if model_type == "tflite" and tflite_available:
-            user_embed = extract_embedding_tflite(img)
-        elif model_type == "tflite_fp16" and tflite_fp16_available:
-            user_embed = extract_embedding_tflite_fp16(img)
-        else:
-            user_embed = extract_embedding_deepface(img)
-
-        if user_embed is None or len(user_embed) == 0:
+        if not face_coords:
             return jsonify({
                 "status": False, 
                 "message": "Wajah tidak terdeteksi!",
-                "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}"
+                "image_with_bbox": None,
+                "results": []
             })
 
-        user_embed = np.array(user_embed)
-
-        # ambil user DB
+        # Ambil semua users dari DB sekali saja
         db = get_db()
         cursor = db.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
+        db_users = cursor.fetchall()
 
-        best_user = None
-        best_score = -1
+        # Process setiap wajah yang terdeteksi
+        face_results = []
+        
+        for idx, (x, y, w, h) in enumerate(face_coords):
+            # Extract embedding untuk face area ini
+            user_embed = extract_embedding_from_face_area(img, x, y, w, h, model_type)
+            
+            if user_embed is None:
+                face_results.append({
+                    "face_num": idx + 1,
+                    "status": False,
+                    "message": "Wajah tidak terdeteksi!",
+                    "name": "Unknown",
+                    "score": 0.0
+                })
+                continue
+            
+            user_embed = np.array(user_embed)
+            best_user = None
+            best_score = -1
+            
+            # Cari user yang paling cocok
+            for row in db_users:
+                emb_db = pickle.loads(base64.b64decode(row["embedding"]))
+                emb_db = np.array(emb_db)
+                sim = cosine_similarity(user_embed, emb_db)
+                
+                if sim > best_score:
+                    best_score = sim
+                    best_user = row
+            
+            # Cek threshold recognition
+            if best_score < 0.40:
+                face_results.append({
+                    "face_num": idx + 1,
+                    "status": False,
+                    "message": "Wajah tidak dikenali!",
+                    "name": "Unknown",
+                    "score": float(best_score)
+                })
+            else:
+                # Catat absensi jika score bagus
+                cursor.execute("INSERT INTO absensi (user_id, waktu) VALUES (%s, NOW())",
+                               (best_user["id"],))
+                db.commit()
+                
+                face_results.append({
+                    "face_num": idx + 1,
+                    "status": True,
+                    "message": f"Presensi Berhasil",
+                    "name": best_user["name"],
+                    "score": float(best_score)
+                })
+        
+        # Draw bounding boxes dengan info dari hasil recognition
+        img_with_bbox = draw_bounding_boxes(img, face_coords, face_info=face_results, color=(0, 255, 0), thickness=3)
+        
+        # Convert back to base64
+        _, buffer = cv2.imencode('.jpg', img_with_bbox)
+        img_bbox_b64 = base64.b64encode(buffer).decode('utf-8')
 
-        for row in rows:
-            emb_db = pickle.loads(base64.b64decode(row["embedding"]))
-            emb_db = np.array(emb_db)
-
-            sim = cosine_similarity(user_embed, emb_db)
-
-            if sim > best_score:
-                best_score = sim
-                best_user = row
-
-        if best_score < 0.40:
-            return jsonify({
-                "status": False, 
-                "message": "Wajah tidak dikenali!",
-                "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}",
-                "score": float(best_score)
-            })
-
-        # catat absensi
-        cursor.execute("INSERT INTO absensi (user_id, waktu) VALUES (%s, NOW())",
-                       (best_user["id"],))
-        db.commit()
+        # Cek apakah ada yang berhasil presensi
+        success_count = sum(1 for r in face_results if r["status"])
+        
+        if success_count > 0:
+            message = f"Presensi Berhasil: {success_count} dari {len(face_results)} wajah"
+        else:
+            message = f"Tidak ada wajah yang dikenali ({len(face_results)} wajah terdeteksi)"
 
         return jsonify({
-            "status": True,
-            "message": f"Presensi Berhasil: {best_user['name']}",
-            "score": float(best_score),
+            "status": success_count > 0,
+            "message": message,
+            "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}",
             "model": model_type,
-            "image_with_bbox": f"data:image/jpeg;base64,{img_bbox_b64}"
+            "results": face_results,
+            "total_faces": len(face_results)
         })
 
     except Exception as e:
-        return jsonify({"status": False, "message": f"Error: {str(e)}"})
+        return jsonify({"status": False, "message": f"Error: {str(e)}", "results": []})
 
 
 if __name__ == "__main__":
