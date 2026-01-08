@@ -9,6 +9,10 @@ import cv2
 from datetime import datetime
 from config import MODEL_CACHE_DIR
 import tensorflow as tf
+from dotenv import load_dotenv
+
+# Load environment variables dari .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
@@ -17,31 +21,8 @@ app.config["UPLOAD_FOLDER"] = "static/uploads"
 os.environ['DEEPFACE_HOME'] = MODEL_CACHE_DIR
 
 # Global model instances
-tflite_interpreter = None
 tflite_fp16_interpreter = None
-tflite_available = False
 tflite_fp16_available = False
-
-def load_tflite_model():
-    """Load TFLite model (Float32)"""
-    global tflite_interpreter, tflite_available
-    try:
-        # Try v2 first, fallback to original
-        tflite_path = "models/arcface_v2.tflite"
-        if not os.path.exists(tflite_path):
-            tflite_path = "models/arcface.tflite"
-            
-        if os.path.exists(tflite_path):
-            tflite_interpreter = tf.lite.Interpreter(model_path=tflite_path)
-            tflite_interpreter.allocate_tensors()
-            tflite_available = True
-            print(f"[+] TFLite model loaded: {tflite_path}")
-        else:
-            print("[!] TFLite model not found")
-            tflite_available = False
-    except Exception as e:
-        print(f"[!] Error loading TFLite: {e}")
-        tflite_available = False
 
 def load_tflite_fp16_model():
     """Load TFLite FP16 quantized model"""
@@ -61,7 +42,6 @@ def load_tflite_fp16_model():
         tflite_fp16_available = False
 
 # Load TFLite models on startup
-load_tflite_model()
 load_tflite_fp16_model()
 
 
@@ -70,35 +50,16 @@ load_tflite_fp16_model()
 # ========================
 def get_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="presensi"
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "presensi"),
+        port=int(os.getenv("DB_PORT", "3306"))
     )
 
 # ========================
 #  MODEL INFERENCE HELPERS
 # ========================
-def extract_embedding_tflite(img_path):
-    """Extract embedding menggunakan TFLite model (Float32)"""
-    try:
-        img = cv2.imread(img_path) if isinstance(img_path, str) else img_path
-        img = cv2.resize(img, (112, 112))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = img.astype(np.float32) / 255.0
-        
-        input_details = tflite_interpreter.get_input_details()
-        output_details = tflite_interpreter.get_output_details()
-        
-        img_batch = np.expand_dims(img, axis=0)
-        tflite_interpreter.set_tensor(input_details[0]['index'], img_batch)
-        tflite_interpreter.invoke()
-        
-        embedding = tflite_interpreter.get_tensor(output_details[0]['index'])[0]
-        return embedding
-    except Exception as e:
-        print(f"[!] TFLite extraction error: {e}")
-        return None
 
 def extract_embedding_deepface(img_path):
     """Extract embedding menggunakan DeepFace original"""
@@ -142,7 +103,7 @@ def extract_embedding_tflite_fp16(img_path):
 # ========================
 @app.route("/")
 def index():
-    return render_template("presensi.html", tflite_available=tflite_available)
+    return render_template("presensi.html")
 
 @app.route("/test-camera")
 def test_camera():
@@ -158,7 +119,7 @@ def admin_register():
 
     name = request.form["name"]
     photo = request.files["photo"]
-    model_type = request.form.get("model_type", "deepface")  # deepface or tflite
+    model_type = request.form.get("model_type", "tflite_fp16")  # deepface or tflite_fp16
 
     filename = name.replace(" ", "_") + ".jpg"
     path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -166,9 +127,7 @@ def admin_register():
 
     # Ekstraksi embedding berdasarkan model type
     try:
-        if model_type == "tflite" and tflite_available:
-            rep = extract_embedding_tflite(path)
-        elif model_type == "tflite_fp16" and tflite_fp16_available:
+        if model_type == "tflite_fp16" and tflite_fp16_available:
             rep = extract_embedding_tflite_fp16(path)
         else:
             rep = extract_embedding_deepface(path)
@@ -468,9 +427,7 @@ def extract_embedding_from_face_area(img, x, y, w, h, model_type="deepface"):
         # Crop face area
         face_area = img[y:y+h, x:x+w]
         
-        if model_type == "tflite" and tflite_available:
-            return extract_embedding_tflite(face_area)
-        elif model_type == "tflite_fp16" and tflite_fp16_available:
+        if model_type == "tflite_fp16" and tflite_fp16_available:
             return extract_embedding_tflite_fp16(face_area)
         else:
             return extract_embedding_deepface(face_area)
@@ -487,7 +444,7 @@ def presensi_kamera():
 
     try:
         image_data = request.form["image_data"]
-        model_type = request.form.get("model_type", "deepface")  # deepface or tflite
+        model_type = request.form.get("model_type", "tflite_fp16")  # deepface or tflite_fp16
         
         image_data = image_data.split(",")[1]
         img_bytes = base64.b64decode(image_data)
@@ -595,4 +552,7 @@ def presensi_kamera():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)
+
