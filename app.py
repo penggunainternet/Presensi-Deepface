@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, jsonify
-from deepface import DeepFace
 import mysql.connector
 import numpy as np
 import pickle
@@ -7,7 +6,7 @@ import base64
 import os
 import cv2
 from datetime import datetime
-from config import MODEL_CACHE_DIR
+from config import MODEL_CACHE_DIR, DB_CONFIG
 import tensorflow as tf
 from dotenv import load_dotenv
 
@@ -49,13 +48,7 @@ load_tflite_fp16_model()
 #  DATABASE CONNECT
 # ========================
 def get_db():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", ""),
-        database=os.getenv("DB_NAME", "presensi"),
-        port=int(os.getenv("DB_PORT", "3306"))
-    )
+    return mysql.connector.connect(**DB_CONFIG)
 
 # ========================
 #  MODEL INFERENCE HELPERS
