@@ -5,9 +5,11 @@ temp_user.jpg
 
 # Model cache (besar)
 models/
+!models/*.tflite
 *.hdf5
+*.h5
 *.pb
-*.tflite
+
 
 # Uploads folder
 static/uploads/*
