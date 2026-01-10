@@ -4,8 +4,7 @@ temp_user.jpg
 *.log
 
 # Model cache (besar)
-models/
-!models/*.tflite
+
 *.hdf5
 *.h5
 *.pb

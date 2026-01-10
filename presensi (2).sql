@@ -26,6 +26,8 @@ SET time_zone = "+00:00";
 --
 -- Table structure for table `absensi`
 --
+SET FOREIGN_KEY_CHECKS=0;
+
 
 CREATE TABLE `absensi` (
   `id` int NOT NULL,
@@ -216,6 +218,8 @@ ALTER TABLE `users`
 ALTER TABLE `absensi`
   ADD CONSTRAINT `absensi_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 COMMIT;
+
+SET FOREIGN_KEY_CHECKS=1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
